@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Heart, Minus, Plus } from '@lucide/vue'
+import { Heart, Image, Minus, Plus } from '@lucide/vue'
 import { NumberFieldDecrement, NumberFieldIncrement, NumberFieldInput, NumberFieldRoot } from 'reka-ui'
 import { cn } from '~/lib/utils'
-import { withInstructionSteps } from '~/utils/recipes'
+import { withInstructionSteps, withScaledIngredients } from '~/utils/recipes'
 
 const route = useRoute()
 const router = useRouter()
@@ -20,7 +20,15 @@ function goBack() {
 const { data, status } = await useFetch(`/api/recipes/${recipeId.value}`)
 
 const isFavorite = ref(data.value?.isFavorite ?? false)
-const servings = ref(data.value?.servings ?? 0)
+const servings = ref(data.value?.servings ?? 1)
+
+/** How far the cook has moved the stepper from the recipe's own yield. */
+const factor = computed(() => {
+  const base = data.value?.servings ?? 0
+  return base > 0 ? servings.value / base : 1
+})
+
+const scaledIngredients = computed(() => withScaledIngredients(data.value?.ingredients ?? [], factor.value))
 
 const numberedInstructions = computed(() => withInstructionSteps(data.value?.instructions ?? []))
 
@@ -94,19 +102,19 @@ async function toggleFavorite() {
                 Serves
               </div>
               <div class="text-xl font-serif">
-                {{ data.servings }}
+                {{ servings }}
               </div>
             </div>
           </div>
         </div>
-        <div class="w-full h-95 bg-muted rounded-xl overflow-hidden">
+        <div class="flex items-center justify-center w-full h-95 bg-muted rounded-xl overflow-hidden">
           <img
             v-if="data.imageUrl"
             :src="data.imageUrl"
             :alt="data.name"
             class="inset-0 h-full w-full object-cover"
           >
-          <Image v-else :size="18" class="text-muted-foreground" />
+          <Image v-else :size="36" class="text-muted-foreground" />
         </div>
 
         <div class="relative flex flex-col md:grid md:grid-cols-[330px_1fr] gap-10">
@@ -142,7 +150,7 @@ async function toggleFavorite() {
               </div>
             </NumberFieldRoot>
             <div class="flex flex-col">
-              <template v-for="(ingredient, index) of data.ingredients" :key="`ingredient-${index}`">
+              <template v-for="{ ingredient, text, index } of scaledIngredients" :key="`ingredient-${index}`">
                 <div v-if="ingredient.type === 'header'" class="py-3 text-primary font-semibold">
                   {{ ingredient.title }}
                 </div>
@@ -151,7 +159,7 @@ async function toggleFavorite() {
                   <Label
                     :for="`ingredient-${index}`"
                     class="text-regular peer-data-[state=checked]:line-through peer-data-[state=checked]:text-muted-foreground"
-                  >{{ ingredient.raw }}</Label>
+                  >{{ text }}</Label>
                 </div>
               </template>
             </div>

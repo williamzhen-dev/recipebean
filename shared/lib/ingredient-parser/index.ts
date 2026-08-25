@@ -1,4 +1,5 @@
-export { formatIngredient } from './format'
+export { formatIngredient, formatUnit } from './format'
 export { parseIngredient } from './parse'
+export { scaleIngredient } from './scale'
 export { ingredientSchema } from './schemas'
 export type { Ingredient, Quantity } from './schemas'
