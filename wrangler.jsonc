@@ -23,8 +23,7 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "f8f1a35c2ce14cd1bec19e912ebc4be7",
-      "localConnectionString": "postgres://root:password@localhost:5432/recipebean"
+      "id": "f8f1a35c2ce14cd1bec19e912ebc4be7"
     }
   ]
 }

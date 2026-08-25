@@ -39,7 +39,7 @@ export const NUMBER_WORDS: Record<string, number> = {
   dozen: 12,
 }
 
-interface UnitDef {
+export interface UnitDef {
   aliases: string[]
   singular: string
   plural: string
@@ -47,7 +47,7 @@ interface UnitDef {
   invariant: boolean
 }
 
-const UNIT_DEFS: Record<string, UnitDef> = {
+export const UNIT_DEFS: Record<string, UnitDef> = {
   // weight
   mg: {
     aliases: ['mg', 'milligram', 'milligrams'],
