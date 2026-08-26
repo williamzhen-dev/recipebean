@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
       eq(recipesTable.userId, user.id),
       ...filters,
     ),
+    with: { image: true },
   })
 
   return recipes

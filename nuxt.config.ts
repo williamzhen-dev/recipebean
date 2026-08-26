@@ -61,11 +61,27 @@ export default defineNuxtConfig({
       clerk: {
         publishableKey: '',
       },
+      // Origin that serves R2 objects. Blank locally, so images fall back to
+      // the /api/media/<key> worker route reading Miniflare's on-disk R2. In
+      // production this is the bucket's custom domain, so images come straight
+      // from the edge and never invoke the worker.
+      mediaBaseUrl: '',
     },
   },
 
   nitro: {
     preset: 'cloudflare_module',
+
+    typescript: {
+      tsConfig: {
+        // `wrangler types` writes the binding globals (R2Bucket, Hyperdrive, …)
+        // to worker-configuration.d.ts at the repo root. Nuxt's app and shared
+        // tsconfigs pick root `*.d.ts` up automatically, but the server one
+        // includes only server/**/*, so server code needs this added by hand.
+        // Regenerate with `bun run cf-typegen` after editing wrangler.jsonc.
+        include: ['../worker-configuration.d.ts'],
+      },
+    },
 
     cloudflare: {
       deployConfig: true,

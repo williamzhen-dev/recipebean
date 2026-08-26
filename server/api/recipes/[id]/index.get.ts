@@ -19,12 +19,13 @@ export default defineEventHandler(async (event) => {
       eq(recipesTable.userId, user.id),
       eq(recipesTable.id, params.id),
     ),
+    with: { image: true },
   })
 
   if (!recipe) {
     throw createError({
-      status: 401,
-      message: 'Missing recipe',
+      statusCode: 404,
+      statusMessage: 'Recipe not found',
     })
   }
 

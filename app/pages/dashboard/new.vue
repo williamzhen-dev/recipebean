@@ -9,7 +9,7 @@ import { withInstructionSteps } from '~/utils/recipes'
 
 const { r$ } = useRegleSchema({
   name: '',
-  imageUrl: '',
+  imageFileId: null,
   description: '',
   prepTime: 0,
   cookTime: 0,
@@ -133,6 +133,9 @@ async function onSubmit() {
   catch (err: any) {
     console.error(err)
   }
+  finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -159,9 +162,7 @@ async function onSubmit() {
       <form id="create-recipe-form" class="flex flex-col md:grid md:grid-cols-[400px_1fr] gap-10 py-10" @submit.prevent="onSubmit">
         <FieldSet>
           <FieldGroup>
-            <div class="flex items-center justify-center w-full h-65 rounded-xl bg-muted">
-              Upload image
-            </div>
+            <ImageUpload v-model="r$.$value.imageFileId" />
             <Field :data-invalid="r$.name.$error" class="gap-1">
               <FieldLabel for="create-recipe-form-name">
                 Recipe Name

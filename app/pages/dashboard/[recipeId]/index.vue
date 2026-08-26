@@ -4,6 +4,8 @@ import { NumberFieldDecrement, NumberFieldIncrement, NumberFieldInput, NumberFie
 import { cn } from '~/lib/utils'
 import { withInstructionSteps, withScaledIngredients } from '~/utils/recipes'
 
+const { mediaUrl } = useMediaUrl()
+
 const route = useRoute()
 const router = useRouter()
 const recipeId = computed(() => route.params.recipeId)
@@ -109,9 +111,11 @@ async function toggleFavorite() {
         </div>
         <div class="flex items-center justify-center w-full h-95 bg-muted rounded-xl overflow-hidden">
           <img
-            v-if="data.imageUrl"
-            :src="data.imageUrl"
+            v-if="data.image"
+            :src="mediaUrl(data.image.key)"
             :alt="data.name"
+            :width="data.image.width ?? undefined"
+            :height="data.image.height ?? undefined"
             class="inset-0 h-full w-full object-cover"
           >
           <Image v-else :size="36" class="text-muted-foreground" />

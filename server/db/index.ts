@@ -10,6 +10,15 @@ interface HyperdriveBinding {
   connectionString: string
 }
 
+// Builds a client from a Hyperdrive connection string. Callers that own the
+// pool must `await close()`; request handlers can ignore it (see `useDb`).
+export function createDb(connectionString: string): { db: Database, close: () => Promise<void> } {
+  const pool = new Pool({ connectionString })
+  const db = drizzle({ client: pool, schema, casing: 'snake_case' })
+
+  return { db, close: () => pool.end() }
+}
+
 // Cloudflare Workers forbid reusing a database connection across requests, so
 // the client must be created per-request and never cached in module scope.
 // Hyperdrive pools the underlying connection to the origin database, so
@@ -28,8 +37,7 @@ export function useDb(event: H3Event): Database {
   if (!connectionString)
     throw createError({ statusCode: 500, statusMessage: 'Hyperdrive binding is not available' })
 
-  const pool = new Pool({ connectionString })
-  const db = drizzle({ client: pool, schema, casing: 'snake_case' })
+  const { db } = createDb(connectionString)
 
   event.context.db = db
   return db

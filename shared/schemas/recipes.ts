@@ -1,5 +1,5 @@
 import type { Serialize } from 'nitropack/types'
-import type { recipesTable } from '~~/server/db/schema'
+import type { filesTable, recipesTable } from '~~/server/db/schema'
 import * as z from 'zod'
 import { ingredientSchema } from '~~/shared/lib/ingredient-parser'
 
@@ -30,7 +30,7 @@ const recipeInstructionSchema = z.discriminatedUnion('type', [
 
 export const createRecipeSchema = z.object({
   name: z.string().min(1, { error: 'Required' }),
-  imageUrl: z.string(),
+  imageFileId: z.uuid().nullable(),
   description: z.string(),
   prepTime: z.int().nonnegative(),
   cookTime: z.int().nonnegative(),
@@ -47,4 +47,8 @@ export const toggleFavoriteSchema = z.object({
 
 export type RecipeIngredient = z.infer<typeof recipeIngredientSchema>
 export type RecipeInstruction = z.infer<typeof recipeInstructionSchema>
-export type SerializedRecipe = Serialize<typeof recipesTable.$inferSelect>
+// The recipe GET routes join the banner image, so the serialized shape carries
+// the file row alongside the recipe columns.
+export type SerializedRecipe = Serialize<
+  typeof recipesTable.$inferSelect & { image: typeof filesTable.$inferSelect | null }
+>

@@ -20,10 +20,36 @@
       "custom_domain": true
     }
   ],
+  // Plain (non-secret) runtime variables. Nitro reads these into
+  // `useRuntimeConfig()` at request time, so changing one needs a redeploy but
+  // not a rebuild. Secrets belong in `wrangler secret put`, never here.
+  "vars": {
+    // Custom domain on the recipebean-media bucket. Recipe images live under
+    // the ssr:false /dashboard routes, which render at request time and so pick
+    // this up at runtime. Leave it unset locally: `nuxt dev` then falls back to
+    // the /api/media/<key> route reading Miniflare's on-disk R2.
+    "NUXT_PUBLIC_MEDIA_BASE_URL": "https://media.recipebean.app"
+  },
+
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
       "id": "f8f1a35c2ce14cd1bec19e912ebc4be7"
     }
-  ]
+  ],
+  // In `nuxt dev` this is emulated by Miniflare on local disk under
+  // .wrangler/state/v3/r2 — no network calls to Cloudflare.
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "recipebean-media"
+    }
+  ],
+  // Sweeps `pending` file rows older than 7 days. Handled by the
+  // `cloudflare:scheduled` hook in server/plugins/cleanup-pending-files.ts.
+  "triggers": {
+    "crons": [
+      "0 3 * * *"
+    ]
+  }
 }
