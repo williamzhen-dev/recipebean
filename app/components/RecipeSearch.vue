@@ -6,6 +6,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 
 const { open } = useRecipeSearch()
+const { mediaUrl } = useMediaUrl()
 
 // Shares Nuxt's cache with the dashboard list page (same URL/key), so no extra request there.
 const { data: recipes } = useFetch('/api/recipes', {
@@ -64,8 +65,8 @@ function selectRecipe(id: string) {
             >
               <div class="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
                 <img
-                  v-if="recipe.imageUrl"
-                  :src="recipe.imageUrl"
+                  v-if="recipe.image"
+                  :src="mediaUrl(recipe.image.key)"
                   :alt="recipe.name"
                   class="size-full object-cover"
                 >

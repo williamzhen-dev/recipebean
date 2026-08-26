@@ -6,6 +6,8 @@ const props = defineProps<{
   recipe: SerializedRecipe
 }>()
 
+const { mediaUrl } = useMediaUrl()
+
 const totalTime = computed(() => props.recipe.prepTime + props.recipe.cookTime)
 
 const isFavorite = ref(props.recipe.isFavorite)
@@ -39,9 +41,11 @@ async function toggleFavorite() {
         <Heart :size="18" />
       </Button>
       <img
-        v-if="props.recipe.imageUrl"
-        :src="props.recipe.imageUrl"
+        v-if="props.recipe.image"
+        :src="mediaUrl(props.recipe.image.key)"
         :alt="props.recipe.name"
+        :width="props.recipe.image.width ?? undefined"
+        :height="props.recipe.image.height ?? undefined"
         class="absolute inset-0 h-full w-full object-cover"
       >
       <Image v-else :size="18" class="text-muted-foreground" />

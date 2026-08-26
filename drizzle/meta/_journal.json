@@ -8,6 +8,13 @@
       "when": 1784935017033,
       "tag": "0000_daffy_red_skull",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787707995747,
+      "tag": "0001_special_puppet_master",
+      "breakpoints": true
     }
   ]
 }
