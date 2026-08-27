@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Heart, Image, Minus, Plus } from '@lucide/vue'
+import { Heart, Image, Minus, Pencil, Plus } from '@lucide/vue'
 import { NumberFieldDecrement, NumberFieldIncrement, NumberFieldInput, NumberFieldRoot } from 'reka-ui'
 import { cn } from '~/lib/utils'
 import { withInstructionSteps, withScaledIngredients } from '~/utils/recipes'
@@ -7,17 +7,7 @@ import { withInstructionSteps, withScaledIngredients } from '~/utils/recipes'
 const { mediaUrl } = useMediaUrl()
 
 const route = useRoute()
-const router = useRouter()
 const recipeId = computed(() => route.params.recipeId)
-
-function goBack() {
-  if (window.history.state.back) {
-    router.back()
-  }
-  else {
-    router.push('/dashboard')
-  }
-}
 
 const { data, status } = await useFetch(`/api/recipes/${recipeId.value}`)
 
@@ -53,11 +43,16 @@ async function toggleFavorite() {
   <div>
     <header class="flex items-center h-20 border-b">
       <div class="flex items-center justify-between container">
-        <button @click="goBack">
+        <NuxtLink to="/dashboard">
           <Logo class="h-7" />
-        </button>
+        </NuxtLink>
 
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-3">
+          <Button variant="outline" size="sm" as-child>
+            <NuxtLink :to="`/dashboard/${recipeId}/edit`">
+              <Pencil :size="16" /> Edit
+            </NuxtLink>
+          </Button>
           <button
             :aria-label="isFavorite ? 'Remove from favourites' : 'Add to favourites'"
             :aria-pressed="isFavorite"

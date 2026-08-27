@@ -4,6 +4,11 @@ import { ImagePlus, Loader2, X } from '@lucide/vue'
 import { cn } from '~/lib/utils'
 import { ImageProcessingError, processImage } from '~/utils/image'
 
+const props = defineProps<{
+  /** Banner already saved on the recipe, for the edit form. */
+  initialUrl?: string | null
+}>()
+
 // The file id, assigned once the upload lands. The recipe form submits this and
 // the server flips the row from `pending` to `attached`.
 const fileId = defineModel<string | null>({ required: true })
@@ -13,6 +18,10 @@ const dropZone = useTemplateRef<HTMLDivElement>('dropZone')
 const previewUrl = ref<string | null>(null)
 const uploading = ref(false)
 const error = ref<string | null>(null)
+
+// A local preview wins. Otherwise fall back to the saved banner, but only while
+// the model still holds an id — clearing the image must clear the banner too.
+const displayUrl = computed(() => previewUrl.value ?? (fileId.value ? props.initialUrl ?? null : null))
 
 function clearPreview() {
   if (previewUrl.value) {
@@ -95,14 +104,14 @@ onBeforeUnmount(clearPreview)
       )"
     >
       <img
-        v-if="previewUrl"
-        :src="previewUrl"
+        v-if="displayUrl"
+        :src="displayUrl"
         alt="Recipe banner preview"
         :class="cn('absolute inset-0 h-full w-full object-cover', uploading && 'opacity-50')"
       >
 
       <button
-        v-if="!previewUrl"
+        v-if="!displayUrl"
         type="button"
         class="flex flex-col items-center gap-2 text-muted-foreground min-h-11 px-4"
         :disabled="uploading"
@@ -119,7 +128,7 @@ onBeforeUnmount(clearPreview)
       </div>
 
       <Button
-        v-if="previewUrl && !uploading"
+        v-if="displayUrl && !uploading"
         type="button"
         size="icon"
         variant="secondary"
