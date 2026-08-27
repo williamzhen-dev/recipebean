@@ -69,6 +69,18 @@ export default defineNuxtConfig({
     },
   },
 
+  typescript: {
+    // The recipe-import unit tests sit beside the module they cover, and the
+    // generated shared tsconfig is written with `types: []`, so `bun:test`
+    // would be unresolved under `bun run tsc`. Run `bun run postinstall` after
+    // editing this to regenerate .nuxt/tsconfig.shared.json.
+    sharedTsConfig: {
+      compilerOptions: {
+        types: ['bun'],
+      },
+    },
+  },
+
   nitro: {
     preset: 'cloudflare_module',
 

@@ -9,6 +9,8 @@
     "preview": "bun run build && wrangler dev",
     "postinstall": "nuxt prepare",
     "tsc": "nuxt typecheck",
+    "test": "bun test shared/",
+    "test:watch": "bun test shared/ --watch",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "db:generate": "drizzle-kit generate",
