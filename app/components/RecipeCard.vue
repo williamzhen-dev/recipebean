@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { SerializedRecipe } from '~~/shared/schemas/recipes'
-import { Clock, Heart, Image, Utensils } from '@lucide/vue'
+import { Clock, Heart, Image, Pencil, Utensils } from '@lucide/vue'
 
 const props = defineProps<{
   recipe: SerializedRecipe
@@ -39,6 +39,17 @@ async function toggleFavorite() {
         @click.prevent.stop="toggleFavorite"
       >
         <Heart :size="18" />
+      </Button>
+      <!-- The card sits inside a NuxtLink, so this cannot be a link of its own.
+           Stop the click the same way the favourite button does. -->
+      <Button
+        size="icon"
+        variant="secondary"
+        class="absolute top-2 right-12 z-10 rounded-full"
+        aria-label="Edit recipe"
+        @click.prevent.stop="navigateTo(`/dashboard/${props.recipe.id}/edit`)"
+      >
+        <Pencil :size="18" />
       </Button>
       <img
         v-if="props.recipe.image"

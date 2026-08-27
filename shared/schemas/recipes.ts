@@ -41,10 +41,19 @@ export const createRecipeSchema = z.object({
   categoryIds: z.array(z.string()),
 })
 
+// An update replaces the whole recipe body, so it takes the same shape as a
+// create. `categoryIds` is optional because the form has no category picker
+// yet: omitting it must leave the existing join rows alone, not wipe them.
+export const updateRecipeSchema = createRecipeSchema.extend({
+  categoryIds: z.array(z.string()).optional(),
+})
+
 export const toggleFavoriteSchema = z.object({
   isFavorite: z.boolean(),
 })
 
+// The value the recipe form holds and submits, shared by the create and edit pages.
+export type RecipeInput = z.infer<typeof createRecipeSchema>
 export type RecipeIngredient = z.infer<typeof recipeIngredientSchema>
 export type RecipeInstruction = z.infer<typeof recipeInstructionSchema>
 // The recipe GET routes join the banner image, so the serialized shape carries
