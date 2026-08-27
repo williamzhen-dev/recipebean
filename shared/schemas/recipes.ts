@@ -52,8 +52,19 @@ export const toggleFavoriteSchema = z.object({
   isFavorite: z.boolean(),
 })
 
+// Request body of POST /api/import/recipe.
+export const importRecipeSchema = z.object({
+  url: z.url({ error: 'Enter a recipe link.' }).max(2048),
+})
+
 // The value the recipe form holds and submits, shared by the create and edit pages.
 export type RecipeInput = z.infer<typeof createRecipeSchema>
+// Response body of POST /api/import/recipe. It seeds the form and nothing
+// else: `categoryIds` is left off because there is no category picker, and
+// `imageKey` rides along so the page can show the banner it just stored.
+export type ImportedRecipeResponse = Omit<RecipeInput, 'categoryIds'> & {
+  imageKey: string | null
+}
 export type RecipeIngredient = z.infer<typeof recipeIngredientSchema>
 export type RecipeInstruction = z.infer<typeof recipeInstructionSchema>
 // The recipe GET routes join the banner image, so the serialized shape carries

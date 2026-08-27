@@ -126,20 +126,69 @@ function removeLeadingOf(input: string): string {
   return input.trimStart().replace(/^of\s+/i, '').trimStart()
 }
 
+/**
+ * Splits out parenthesised asides, counting depth as it goes.
+ *
+ * Depth matters because a flat `\\([^)]*\\)` stops at the first closing bracket
+ * and leaves a stray one behind. Nobody types "(from 2 containers, Good Culture
+ * (or ricotta))" by hand, but recipe sites publish it, so an imported line hits
+ * this where a typed one never did.
+ */
+function extractParenComments(input: string): { rest: string, comments: string[] } {
+  const comments: string[] = []
+  let rest = ''
+  let buffer = ''
+  let depth = 0
+
+  for (const char of input) {
+    if (char === '(') {
+      if (depth > 0) {
+        buffer += char
+      }
+      depth++
+      continue
+    }
+
+    if (char === ')' && depth > 0) {
+      depth--
+      if (depth > 0) {
+        buffer += char
+        continue
+      }
+
+      const comment = buffer.trim()
+      if (comment) {
+        comments.push(comment)
+      }
+      buffer = ''
+      rest += ' '
+      continue
+    }
+
+    if (depth > 0) {
+      buffer += char
+    }
+    else {
+      rest += char
+    }
+  }
+
+  // An unclosed bracket is a typo, not an aside. Put the text back in the
+  // product rather than swallowing the rest of the line into a comment.
+  if (depth > 0) {
+    rest += `(${buffer}`
+  }
+
+  return { rest, comments }
+}
+
 function parseProductAndComments(input: string): {
   product: string
   comments: string | null
 } {
-  const parenComments: string[] = []
+  const { rest, comments: parenComments } = extractParenComments(input)
 
-  input = input
-    .replace(/\([^)]*\)/g, (match) => {
-      const comment = match.slice(1, -1).trim()
-      if (comment) {
-        parenComments.push(comment)
-      }
-      return ' '
-    })
+  input = rest
     .replace(/\s+/g, ' ')
     .trim()
 
