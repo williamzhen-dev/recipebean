@@ -108,7 +108,7 @@ async function onGoogle() {
         <Logo class="h-7" />
       </NuxtLink>
 
-      <div class="flex-1 flex items-center">
+      <div class="flex-1 flex items-start md:items-center">
         <div class="w-full max-w-md mx-auto flex flex-col gap-6 md:mx-0">
           <div v-if="errorMessage" class="border rounded-md text-sm py-3 px-4 text-destructive bg-destructive/5 font-medium border-destructive">
             {{ errorMessage }}
