@@ -70,7 +70,7 @@ async function toggleFavorite() {
           <Clock :size="18" /> {{ totalTime }} min
         </div>
         <div class="text-sm flex items-center gap-1.5">
-          <Utensils :size="18" /> serves {{ props.recipe.servings }}
+          <Utensils :size="18" /> Serves {{ props.recipe.servings }}
         </div>
       </div>
     </div>

@@ -8,9 +8,15 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 const { open } = useRecipeSearch()
 const { mediaUrl } = useMediaUrl()
 
-// Shares Nuxt's cache with the dashboard list page (same URL/key), so no extra request there.
+// Shares one asyncData entry with the dashboard list page. The explicit key is
+// what makes that true: without it Nuxt derives a key from the call site, so the
+// two calls got separate entries and each made its own request. `defer` keeps it
+// to one request when both mount together — the default `cancel` would abort the
+// page's in-flight fetch and start a second one.
 const { data: recipes } = useFetch('/api/recipes', {
+  key: 'recipes',
   default: () => [] as SerializedRecipe[],
+  dedupe: 'defer',
 })
 
 // Text the built-in Command filter matches against (name is visible, ingredients are sr-only).

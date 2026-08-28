@@ -1,11 +1,21 @@
 <script setup lang="ts">
+import type { SerializedRecipe } from '~~/shared/schemas/recipes'
 import RecipeCard from '~/components/RecipeCard.vue'
 
 definePageMeta({
   layout: 'dashboard',
 })
 
-const { data, status } = await useFetch('/api/recipes')
+// Keyed so the dashboard layout's RecipeSearch reuses this fetch instead of
+// making its own. The entry outlives this page, because RecipeSearch sits in the
+// layout, but every route that adds or deletes a recipe uses the default layout
+// and so unmounts RecipeSearch, which clears the entry. Coming back here after a
+// change therefore always refetches.
+const { data, status } = await useFetch('/api/recipes', {
+  key: 'recipes',
+  default: () => [] as SerializedRecipe[],
+  dedupe: 'defer',
+})
 </script>
 
 <template>
