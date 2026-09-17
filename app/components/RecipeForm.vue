@@ -56,6 +56,28 @@ const addingInstructionHeader = ref(false)
 const instructionHeaderTitle = ref('')
 const instructionHeaderInput = useTemplateRef<HTMLInputElement>('instructionHeaderInput')
 
+// Inline row editors. At most one row per list is open, `null` meaning none.
+// The index is into the value array, so anything that shifts indices (delete,
+// drag) closes the editor first.
+const editingIngredientIndex = ref<number | null>(null)
+const editingIngredientText = ref('')
+const editingInstructionIndex = ref<number | null>(null)
+const editingInstructionText = ref('')
+
+/**
+ * Template ref for the open row editor. Vue calls this once on mount, so the
+ * field takes focus without a `nextTick` dance; the guard keeps a stray call
+ * from stealing the caret back mid-typing.
+ */
+function focusEditor(el: unknown) {
+  if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement))
+    return
+  if (document.activeElement === el)
+    return
+  el.focus()
+  el.select()
+}
+
 function addIngredient() {
   const currIngredient = currentIngredient.value.trim()
 
@@ -69,7 +91,47 @@ function addIngredient() {
 }
 
 function deleteIngredient(index: number) {
+  cancelEditIngredient()
   r$.$value.ingredients.splice(index, 1)
+}
+
+/** Seeds the editor with the text the row shows, so editing is WYSIWYG. */
+function startEditIngredient(index: number) {
+  const ingredient = r$.$value.ingredients[index]
+
+  if (!ingredient)
+    return
+
+  editingIngredientIndex.value = index
+  editingIngredientText.value = ingredient.type === 'header'
+    ? ingredient.title
+    : formatIngredient(ingredient as Ingredient)
+}
+
+function commitEditIngredient() {
+  const index = editingIngredientIndex.value
+
+  if (index === null)
+    return
+
+  const ingredient = r$.$value.ingredients[index]
+  const text = editingIngredientText.value.trim()
+
+  editingIngredientIndex.value = null
+  editingIngredientText.value = ''
+
+  // Blanking a row is not a delete: leave it as it was and let the X do that.
+  if (!ingredient || text.length === 0)
+    return
+
+  r$.$value.ingredients[index] = ingredient.type === 'header'
+    ? { type: 'header', title: text }
+    : { type: 'ingredient', ...parseIngredient(text) }
+}
+
+function cancelEditIngredient() {
+  editingIngredientIndex.value = null
+  editingIngredientText.value = ''
 }
 
 function addInstruction() {
@@ -83,7 +145,45 @@ function addInstruction() {
 }
 
 function deleteInstruction(index: number) {
+  cancelEditInstruction()
   r$.$value.instructions.splice(index, 1)
+}
+
+function startEditInstruction(index: number) {
+  const instruction = r$.$value.instructions[index]
+
+  if (!instruction)
+    return
+
+  editingInstructionIndex.value = index
+  editingInstructionText.value = instruction.type === 'header'
+    ? instruction.title
+    : instruction.raw
+}
+
+function commitEditInstruction() {
+  const index = editingInstructionIndex.value
+
+  if (index === null)
+    return
+
+  const instruction = r$.$value.instructions[index]
+  const text = editingInstructionText.value.trim()
+
+  editingInstructionIndex.value = null
+  editingInstructionText.value = ''
+
+  if (!instruction || text.length === 0)
+    return
+
+  r$.$value.instructions[index] = instruction.type === 'header'
+    ? { type: 'header', title: text }
+    : { type: 'instruction', raw: text }
+}
+
+function cancelEditInstruction() {
+  editingInstructionIndex.value = null
+  editingInstructionText.value = ''
 }
 
 async function startIngredientHeader() {
@@ -312,6 +412,7 @@ async function onSubmit() {
                 handle=".drag-handle"
                 ghost-class="opacity-40"
                 :animation="150"
+                @start="cancelEditIngredient"
               >
                 <div
                   v-for="(ingredient, index) of r$.$value.ingredients" :key="`ingredient-${index}`" :class="cn('flex items-start gap-3 py-3 px-2', {
@@ -319,15 +420,48 @@ async function onSubmit() {
                   })"
                 >
                   <GripVertical :size="16" class="drag-handle mt-1 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing" />
-                  <div v-if="ingredient.type === 'header'" class="min-w-0 flex-1 text-primary font-semibold">
-                    {{ ingredient.title }}
-                  </div>
-                  <p v-else class="min-w-0 flex-1 leading-6">
-                    {{ formatIngredient(ingredient as Ingredient) }}
-                  </p>
-                  <button type="button" class="mt-1 shrink-0" @click="deleteIngredient(index)">
-                    <X :size="18" class="text-muted-foreground" />
-                  </button>
+                  <template v-if="editingIngredientIndex === index">
+                    <input
+                      :ref="focusEditor"
+                      v-model="editingIngredientText"
+                      type="text"
+                      class="min-w-0 flex-1 rounded-md border border-input bg-white px-3 py-1 text-sm focus-visible:outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                      @keydown.enter.prevent="commitEditIngredient"
+                      @keydown.esc.prevent="cancelEditIngredient"
+                      @blur="commitEditIngredient"
+                    >
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      class="shrink-0"
+                      @mousedown.prevent
+                      @click="commitEditIngredient"
+                    >
+                      <Check :size="16" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="outline"
+                      class="shrink-0"
+                      @mousedown.prevent
+                      @click="cancelEditIngredient"
+                    >
+                      <X :size="16" />
+                    </Button>
+                  </template>
+                  <template v-else>
+                    <button
+                      type="button"
+                      :class="cn('min-w-0 flex-1 text-left', ingredient.type === 'header' ? 'text-primary font-semibold' : 'leading-6')"
+                      @click="startEditIngredient(index)"
+                    >
+                      {{ ingredient.type === 'header' ? ingredient.title : formatIngredient(ingredient as Ingredient) }}
+                    </button>
+                    <button type="button" class="mt-1 shrink-0" @click="deleteIngredient(index)">
+                      <X :size="18" class="text-muted-foreground" />
+                    </button>
+                  </template>
                 </div>
               </VueDraggable>
             </FieldGroup>
@@ -400,23 +534,54 @@ async function onSubmit() {
                 handle=".drag-handle"
                 ghost-class="opacity-40"
                 :animation="150"
+                @start="cancelEditInstruction"
               >
                 <div v-for="{ instruction, step, index } of numberedInstructions" :key="`instruction-${index}`" class="flex items-start gap-3 py-3 px-2">
                   <GripVertical :size="16" class="drag-handle mt-1 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing" />
-                  <div v-if="instruction.type === 'header'" class="text-primary font-semibold">
-                    {{ instruction.title }}
+                  <div v-if="instruction.type === 'instruction'" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent font-serif font-semibold text-primary">
+                    {{ step }}
                   </div>
-                  <template v-else>
-                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent font-serif font-semibold text-primary">
-                      {{ step }}
-                    </div>
-                    <p class="min-w-0 flex-1 leading-6">
-                      {{ instruction.raw }}
-                    </p>
+                  <template v-if="editingInstructionIndex === index">
+                    <textarea
+                      :ref="focusEditor"
+                      v-model="editingInstructionText"
+                      class="h-24 min-w-0 flex-1 resize-none rounded-md border border-input bg-white px-3 py-2 text-sm leading-6 focus-visible:outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                      @keydown.enter.prevent="commitEditInstruction"
+                      @keydown.esc.prevent="cancelEditInstruction"
+                      @blur="commitEditInstruction"
+                    />
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      class="shrink-0"
+                      @mousedown.prevent
+                      @click="commitEditInstruction"
+                    >
+                      <Check :size="16" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon-sm"
+                      variant="outline"
+                      class="shrink-0"
+                      @mousedown.prevent
+                      @click="cancelEditInstruction"
+                    >
+                      <X :size="16" />
+                    </Button>
                   </template>
-                  <button type="button" class="mt-1 shrink-0" @click="deleteInstruction(index)">
-                    <X :size="18" class="text-muted-foreground" />
-                  </button>
+                  <template v-else>
+                    <button
+                      type="button"
+                      :class="cn('min-w-0 flex-1 text-left', instruction.type === 'header' ? 'text-primary font-semibold' : 'leading-6')"
+                      @click="startEditInstruction(index)"
+                    >
+                      {{ instruction.type === 'header' ? instruction.title : instruction.raw }}
+                    </button>
+                    <button type="button" class="mt-1 shrink-0" @click="deleteInstruction(index)">
+                      <X :size="18" class="text-muted-foreground" />
+                    </button>
+                  </template>
                 </div>
               </VueDraggable>
             </FieldGroup>
