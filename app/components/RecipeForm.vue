@@ -3,6 +3,7 @@ import type { Ingredient } from '~~/shared/lib/ingredient-parser'
 import type { RecipeInput } from '~~/shared/schemas/recipes'
 import { Check, GripVertical, Plus, X } from '@lucide/vue'
 import { useRegleSchema } from '@regle/schemas'
+import { VueDraggable } from 'vue-draggable-plus'
 import { formatIngredient, parseIngredient } from '~~/shared/lib/ingredient-parser'
 import { createRecipeSchema } from '~~/shared/schemas/recipes'
 import { cn } from '~/lib/utils'
@@ -305,24 +306,30 @@ async function onSubmit() {
                   <Plus :size="16" /> Add section header
                 </button>
               </div>
-              <div class="flex flex-col">
+              <VueDraggable
+                v-model="r$.$value.ingredients"
+                class="flex flex-col"
+                handle=".drag-handle"
+                ghost-class="opacity-40"
+                :animation="150"
+              >
                 <div
-                  v-for="(ingredient, index) of r$.ingredients.$each" :key="`ingredient-${index}`" :class="cn('flex items-start gap-3 py-3 px-2', {
-                    'border-b': ingredient.$value.type === 'ingredient',
+                  v-for="(ingredient, index) of r$.$value.ingredients" :key="`ingredient-${index}`" :class="cn('flex items-start gap-3 py-3 px-2', {
+                    'border-b': ingredient.type === 'ingredient',
                   })"
                 >
-                  <GripVertical :size="16" class="mt-1 shrink-0 text-muted-foreground" />
-                  <div v-if="ingredient.$value.type === 'header'" class="min-w-0 flex-1 text-primary font-semibold">
-                    {{ ingredient.$value.title }}
+                  <GripVertical :size="16" class="drag-handle mt-1 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing" />
+                  <div v-if="ingredient.type === 'header'" class="min-w-0 flex-1 text-primary font-semibold">
+                    {{ ingredient.title }}
                   </div>
                   <p v-else class="min-w-0 flex-1 leading-6">
-                    {{ formatIngredient(ingredient.$value as Ingredient) }}
+                    {{ formatIngredient(ingredient as Ingredient) }}
                   </p>
                   <button type="button" class="mt-1 shrink-0" @click="deleteIngredient(index)">
                     <X :size="18" class="text-muted-foreground" />
                   </button>
                 </div>
-              </div>
+              </VueDraggable>
             </FieldGroup>
           </FieldSet>
           <FieldSet class="gap-1">
@@ -387,9 +394,15 @@ async function onSubmit() {
                   <Plus :size="16" /> Add section header
                 </button>
               </div>
-              <div class="flex flex-col">
+              <VueDraggable
+                v-model="r$.$value.instructions"
+                class="flex flex-col"
+                handle=".drag-handle"
+                ghost-class="opacity-40"
+                :animation="150"
+              >
                 <div v-for="{ instruction, step, index } of numberedInstructions" :key="`instruction-${index}`" class="flex items-start gap-3 py-3 px-2">
-                  <GripVertical :size="16" class="mt-1 shrink-0 text-muted-foreground" />
+                  <GripVertical :size="16" class="drag-handle mt-1 shrink-0 cursor-grab text-muted-foreground active:cursor-grabbing" />
                   <div v-if="instruction.type === 'header'" class="text-primary font-semibold">
                     {{ instruction.title }}
                   </div>
@@ -405,7 +418,7 @@ async function onSubmit() {
                     <X :size="18" class="text-muted-foreground" />
                   </button>
                 </div>
-              </div>
+              </VueDraggable>
             </FieldGroup>
           </FieldSet>
           <FieldSet>
