@@ -17,6 +17,7 @@ interface SidebarUser {
   lastName: string | null
   email: string
   pfpId: number
+  recipeCount: number
 }
 
 const props = defineProps<{
@@ -28,6 +29,10 @@ const clerk = useClerk()
 
 const fullName = computed(() =>
   [props.user.firstName, props.user.lastName].filter(Boolean).join(' '),
+)
+
+const recipeCountLabel = computed(() =>
+  `${props.user.recipeCount} ${props.user.recipeCount === 1 ? 'recipe' : 'recipes'}`,
 )
 
 const initials = computed(() =>
@@ -59,7 +64,7 @@ async function signOut() {
             </Avatar>
             <div class="grid flex-1 text-left text-sm leading-tight">
               <span class="truncate font-bold">{{ fullName }}</span>
-              <span class="truncate text-xs text-muted-foreground">48 recipes</span>
+              <span class="truncate text-xs text-muted-foreground">{{ recipeCountLabel }}</span>
             </div>
             <ChevronsUpDown class="ml-auto size-4" />
           </SidebarMenuButton>
@@ -80,7 +85,7 @@ async function signOut() {
               </Avatar>
               <div class="grid flex-1 text-left text-sm leading-tight">
                 <span class="truncate font-bold">{{ fullName }}</span>
-                <span class="truncate text-xs text-muted-foreground">48 recipes</span>
+                <span class="truncate text-xs text-muted-foreground">{{ recipeCountLabel }}</span>
               </div>
             </div>
           </DropdownMenuLabel>
