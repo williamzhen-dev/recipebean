@@ -24,8 +24,7 @@ const errorMessage = ref('')
 const loading = ref(false)
 
 function redirectUrl(): string {
-  const redirect = route.query.r
-  return typeof redirect === 'string' && /^\/(?!\/)/.test(redirect) ? redirect : '/dashboard'
+  return safeRedirectPath(route.query.r)
 }
 
 async function onSubmit() {
@@ -73,18 +72,25 @@ async function onGoogle() {
   loading.value = true
 
   try {
+    // The `?r=` destination has to survive the round trip to Google, and the
+    // callback URL is the one thing Clerk sends the user back to verbatim — so
+    // it rides along there rather than in `redirectUrlComplete` alone.
+    const target = redirectUrl()
+
     await signIn.value.authenticateWithRedirect({
       strategy: 'oauth_google',
-      redirectUrl: '/sso-callback',
-      redirectUrlComplete: '/dashboard',
+      redirectUrl: `/sso-callback?r=${encodeURIComponent(target)}`,
+      redirectUrlComplete: target,
     })
+
+    // `loading` deliberately stays set. This resolves once the redirect is
+    // under way, not once the browser has left, so clearing it here flashes the
+    // form back to enabled for a frame before the page goes.
   }
   catch (err: any) {
     errorMessage.value = err?.errors?.[0]?.longMessage
       ?? err?.errors?.[0]?.message
       ?? 'Could not start Google sign in.'
-  }
-  finally {
     loading.value = false
   }
 }

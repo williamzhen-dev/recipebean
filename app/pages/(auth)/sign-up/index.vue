@@ -75,14 +75,16 @@ async function onGoogle() {
       redirectUrl: '/sso-callback',
       redirectUrlComplete: '/dashboard',
     })
+
+    // `loading` deliberately stays set. This resolves once the redirect is
+    // under way, not once the browser has left, so clearing it here flashes the
+    // form back to enabled for a frame before the page goes.
   }
   catch (err: any) {
     errorMessage.value
       = err?.errors?.[0]?.longMessage
         ?? err?.errors?.[0]?.message
         ?? 'Could not start Google sign up.'
-  }
-  finally {
     loading.value = false
   }
 }

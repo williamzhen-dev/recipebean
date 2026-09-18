@@ -31,6 +31,15 @@ export default defineNuxtRouteMiddleware(async (to) => {
     clerkHasLoaded = true
   }
 
+  // Same transitive state, reached the other way. `setActive` also blanks
+  // `session`/`user`, awaits its own redirect, and restores the real state only
+  // once that navigation resolves — so Clerk's post-OAuth redirect to
+  // /dashboard arrives here looking signed out and was bounced to /login,
+  // flashing the login page before the callback page could finish. Clerk picked
+  // that redirect while holding the real state, so let it through untouched.
+  if (!isLoaded.value)
+    return
+
   // `isSignedIn` is undefined, not false, while Clerk is mid-sign-out. That
   // reads as "not signed in" below, which is what we want: the redirect to
   // /login is let through instead of being bounced back to /dashboard.
