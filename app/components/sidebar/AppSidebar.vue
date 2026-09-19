@@ -20,7 +20,9 @@ const props = withDefaults(defineProps<SidebarProps>(), {
 })
 
 const { user, isLoaded } = useUser()
-const { data: me } = useFetch('/api/me')
+// Keyed so the account page shares this entry and a saved avatar lands in the
+// footer without a second request.
+const { data: me } = useFetch('/api/me', { key: 'me' })
 
 // Shares the dashboard list page's asyncData entry — see RecipeSearch for why
 // the key has to be explicit — so the footer count costs no extra request and

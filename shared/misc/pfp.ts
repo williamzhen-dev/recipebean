@@ -27,3 +27,14 @@ export const PFP = [
 export function randomPfpId() {
   return Math.floor(Math.random() * PFP.length)
 }
+
+/** Accessible name for an avatar, e.g. `salad-bowl.png` → "Salad bowl". */
+export function pfpLabel(id: number) {
+  const file = PFP[id]
+
+  if (!file)
+    return 'Profile picture'
+
+  const words = file.replace(/\.png$/, '').replace(/-/g, ' ')
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}

@@ -98,9 +98,11 @@ async function signOut() {
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            <DropdownMenuItem>
-              <BadgeCheck />
-              Account
+            <DropdownMenuItem as-child>
+              <NuxtLink to="/dashboard/account">
+                <BadgeCheck />
+                Account
+              </NuxtLink>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <CreditCard />
