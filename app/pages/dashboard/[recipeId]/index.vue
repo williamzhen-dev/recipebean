@@ -12,7 +12,7 @@ const recipeId = computed(() => route.params.recipeId)
 const { data, status } = await useFetch(`/api/recipes/${recipeId.value}`)
 
 const isFavorite = ref(data.value?.isFavorite ?? false)
-const servings = ref(data.value?.servings ?? 1)
+const { servings, isChecked, setChecked } = useCookingProgress(String(recipeId.value), data.value)
 
 /** How far the cook has moved the stepper from the recipe's own yield. */
 const factor = computed(() => {
@@ -154,7 +154,11 @@ async function toggleFavorite() {
                   {{ ingredient.title }}
                 </div>
                 <div v-else class="flex items-start gap-3 border-b py-3 px-2 last:border-b-0">
-                  <Checkbox :id="`ingredient-${index}`" />
+                  <Checkbox
+                    :id="`ingredient-${index}`"
+                    :model-value="isChecked(index)"
+                    @update:model-value="setChecked(index, $event === true)"
+                  />
                   <Label
                     :for="`ingredient-${index}`"
                     class="text-regular peer-data-[state=checked]:line-through peer-data-[state=checked]:text-muted-foreground"
